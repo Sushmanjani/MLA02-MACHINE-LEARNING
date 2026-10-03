@@ -1,0 +1,75 @@
+csv 
+import csv
+
+data = [
+    ["Sky", "AirTemp", "Humidity", "Wind", "Water", "Forecast", "EnjoySport"],
+    ["Sunny", "Warm", "Normal", "Strong", "Warm", "Same", "Yes"],
+    ["Sunny", "Warm", "High", "Strong", "Warm", "Same", "Yes"],
+    ["Rainy", "Cold", "High", "Strong", "Warm", "Change", "No"],
+    ["Sunny", "Warm", "High", "Strong", "Cool", "Change", "Yes"]
+]
+
+with open("trainingdata.csv", "w", newline="") as file:
+    writer = csv.writer(file)
+    writer.writerows(data)
+
+print("CSV file created successfully!")
+
+  code
+import csv
+
+# Read CSV file
+with open("trainingdata.csv", "r") as file:
+    data = list(csv.reader(file))
+
+# Remove header
+data = data[1:]
+
+# Number of attributes
+n = len(data[0]) - 1
+
+# Initialize S and G
+S = ['0'] * n
+G = [['?'] * n]
+
+# Candidate-Elimination Algorithm
+for row in data:
+    x = row[:-1]
+    y = row[-1]
+
+    if y == "Yes":
+        # Generalize S
+        for i in range(n):
+            if S[i] == '0':
+                S[i] = x[i]
+            elif S[i] != x[i]:
+                S[i] = '?'
+
+    else:
+        # Specialize G
+        new_G = []
+
+        for g in G:
+            for i in range(n):
+                if g[i] == '?' and S[i] != '?' and S[i] != x[i]:
+                    h = g.copy()
+                    h[i] = S[i]
+                    new_G.append(h)
+
+        G = new_G
+
+print("Specific Hypothesis (S):")
+print(S)
+
+print("\nGeneral Hypotheses (G):")
+for g in G:
+    print(g)
+
+output
+Specific Hypothesis (S):
+['Sunny', 'Warm', '?', 'Strong', '?', '?']
+
+General Hypotheses (G):
+['Sunny', '?', '?', '?', '?', '?']
+['?', 'Warm', '?', '?', '?', '?']
+['?', '?', '?', '?', '?', 'Same']  
