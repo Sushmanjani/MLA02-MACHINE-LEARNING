@@ -1,0 +1,44 @@
+# FIND-S Algorithm
+
+def find_s(data):
+    hypothesis = None
+
+    for example in data:
+        attributes = example[:-1]
+        target = example[-1]
+
+        # Consider only positive examples
+        if target == "Yes":
+
+            # First positive example
+            if hypothesis is None:
+                hypothesis = attributes.copy()
+
+            # Generalize hypothesis
+            else:
+                for i in range(len(hypothesis)):
+                    if hypothesis[i] != attributes[i]:
+                        hypothesis[i] = "?"
+
+    return hypothesis
+
+
+# Training dataset
+data = [
+    ["Sunny", "Warm", "Normal", "Strong", "Warm", "Same", "Yes"],
+    ["Sunny", "Warm", "High", "Strong", "Warm", "Same", "Yes"],
+    ["Rainy", "Cold", "High", "Strong", "Warm", "Change", "No"],
+    ["Sunny", "Warm", "High", "Strong", "Cool", "Change", "Yes"]
+]
+
+# Find the most specific hypothesis
+hypothesis = find_s(data)
+
+print("Most Specific Hypothesis:")
+print(hypothesis)
+
+
+
+out put
+Most Specific Hypothesis:
+['Sunny', 'Warm', '?', 'Strong', '?', '?']
