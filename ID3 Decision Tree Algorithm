@@ -1,0 +1,242 @@
+# ID3 Decision Tree Algorithm - Implementation from Scratch
+
+import pandas as pd
+import math
+
+# ---------------------------------------------------------
+# 1. Create the Play Tennis Dataset
+# ---------------------------------------------------------
+
+data = {
+    'Outlook': ['Sunny', 'Sunny', 'Overcast', 'Rain', 'Rain',
+                'Rain', 'Overcast', 'Sunny', 'Sunny', 'Rain',
+                'Sunny', 'Overcast', 'Overcast', 'Rain'],
+
+    'Temperature': ['Hot', 'Hot', 'Hot', 'Mild', 'Cool',
+                    'Cool', 'Cool', 'Mild', 'Cool', 'Mild',
+                    'Mild', 'Mild', 'Hot', 'Mild'],
+
+    'Humidity': ['High', 'High', 'High', 'High', 'Normal',
+                 'Normal', 'Normal', 'High', 'Normal', 'Normal',
+                 'Normal', 'High', 'Normal', 'High'],
+
+    'Wind': ['Weak', 'Strong', 'Weak', 'Weak', 'Weak',
+             'Strong', 'Strong', 'Weak', 'Weak', 'Weak',
+             'Strong', 'Strong', 'Weak', 'Strong'],
+
+    'Play': ['No', 'No', 'Yes', 'Yes', 'Yes',
+             'No', 'Yes', 'No', 'Yes', 'Yes',
+             'Yes', 'Yes', 'Yes', 'No']
+}
+
+df = pd.DataFrame(data)
+
+print("Training Dataset:")
+display(df)
+
+
+# ---------------------------------------------------------
+# 2. Calculate Entropy
+# ---------------------------------------------------------
+
+def entropy(target_column):
+    values, counts = target_column.value_counts().index, target_column.value_counts().values
+    
+    total = len(target_column)
+    ent = 0
+
+    for count in counts:
+        probability = count / total
+        ent -= probability * math.log2(probability)
+
+    return ent
+
+
+print("\nEntropy of the complete dataset:")
+print(round(entropy(df['Play']), 3))
+
+
+# ---------------------------------------------------------
+# 3. Calculate Information Gain
+# ---------------------------------------------------------
+
+def information_gain(data, attribute, target='Play'):
+
+    total_entropy = entropy(data[target])
+
+    values = data[attribute].unique()
+
+    weighted_entropy = 0
+
+    for value in values:
+
+        subset = data[data[attribute] == value]
+
+        weight = len(subset) / len(data)
+
+        weighted_entropy += weight * entropy(subset[target])
+
+    gain = total_entropy - weighted_entropy
+
+    return gain
+
+
+# Calculate information gain for each attribute
+
+attributes = ['Outlook', 'Temperature', 'Humidity', 'Wind']
+
+print("\nInformation Gain:")
+
+for attribute in attributes:
+    gain = information_gain(df, attribute)
+    print(attribute, ":", round(gain, 3))
+
+
+# ---------------------------------------------------------
+# 4. Implement ID3 Algorithm
+# ---------------------------------------------------------
+
+def ID3(data, attributes, target='Play'):
+
+    # If all examples belong to the same class
+    if len(data[target].unique()) == 1:
+        return data[target].iloc[0]
+
+    # If no attributes are left
+    if len(attributes) == 0:
+        return data[target].mode()[0]
+
+    # Select attribute with maximum information gain
+    gains = {attribute: information_gain(data, attribute, target)
+             for attribute in attributes}
+
+    best_attribute = max(gains, key=gains.get)
+
+    tree = {best_attribute: {}}
+
+    # Create branches
+    for value in data[best_attribute].unique():
+
+        subset = data[data[best_attribute] == value]
+
+        remaining_attributes = [
+            attribute for attribute in attributes
+            if attribute != best_attribute
+        ]
+
+        tree[best_attribute][value] = ID3(
+            subset,
+            remaining_attributes,
+            target
+        )
+
+    return tree
+
+
+# ---------------------------------------------------------
+# 5. Build the Decision Tree
+# ---------------------------------------------------------
+
+attributes = ['Outlook', 'Temperature', 'Humidity', 'Wind']
+
+decision_tree = ID3(df, attributes)
+
+print("\nDecision Tree:")
+print(decision_tree)
+
+
+# ---------------------------------------------------------
+# 6. Display Decision Tree Nicely
+# ---------------------------------------------------------
+
+def print_tree(tree, indent=""):
+
+    if not isinstance(tree, dict):
+        print(indent + "→ " + str(tree))
+        return
+
+    attribute = next(iter(tree))
+
+    print(indent + attribute)
+
+    for value, subtree in tree[attribute].items():
+
+        print(indent + "├──", value)
+
+        if isinstance(subtree, dict):
+            print_tree(subtree, indent + "│   ")
+        else:
+            print(indent + "│   └──", subtree)
+
+
+print("\nReadable Decision Tree:")
+print_tree(decision_tree)
+
+
+# ---------------------------------------------------------
+# 7. Classify a New Sample
+# ---------------------------------------------------------
+
+def predict(tree, sample):
+
+    # If tree is a leaf
+    if not isinstance(tree, dict):
+        return tree
+
+    attribute = next(iter(tree))
+
+    value = sample[attribute]
+
+    subtree = tree[attribute][value]
+
+    return predict(subtree, sample)
+
+
+# New sample
+new_sample = {
+    'Outlook': 'Sunny',
+    'Temperature': 'Cool',
+    'Humidity': 'Normal',
+    'Wind': 'Strong'
+}
+
+prediction = predict(decision_tree, new_sample)
+
+print("\nNew Sample:")
+print(new_sample)
+
+print("\nPrediction:")
+print("Play Tennis =", prediction)
+
+
+output
+Training Dataset:
+Outlook	Temperature	Humidity	Wind	Play
+0	Sunny	Hot	High	Weak	No
+1	Sunny	Hot	High	Strong	No
+2	Overcast	Hot	High	Weak	Yes
+3	Rain	Mild	High	Weak	Yes
+4	Rain	Cool	Normal	Weak	Yes
+5	Rain	Cool	Normal	Strong	No
+6	Overcast	Cool	Normal	Strong	Yes
+7	Sunny	Mild	High	Weak	No
+8	Sunny	Cool	Normal	Weak	Yes
+9	Rain	Mild	Normal	Weak	Yes
+10	Sunny	Mild	Normal	Strong	Yes
+11	Overcast	Mild	High	Strong	Yes
+12	Overcast	Hot	Normal	Weak	Yes
+13	Rain	Mild	High	Strong	No
+
+
+
+Entropy of the complete dataset:
+0.94
+
+Information Gain:
+Outlook : 0.247
+Temperature : 0.029
+Humidity : 0.152
+Wind : 0.048
+
+Decision Tree:
+{'Outlook': {'Sunny': {'Humidity': {'High': 'No', 'Normal': 'Yes'}}, 'Overcast': 'Yes', 'Rain': {'Wind': {'Weak': 'Yes', 'Strong': 'No'}}}}
