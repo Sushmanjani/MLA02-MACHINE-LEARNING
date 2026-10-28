@@ -1,0 +1,104 @@
+# Import libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    confusion_matrix,
+    ConfusionMatrixDisplay
+)
+
+# Load the Iris dataset
+iris = load_iris()
+X = iris.data
+y = iris.target
+
+# Use the same split for all classifiers
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+# Define classifiers
+# Scaling is included for Logistic Regression and K-NN because they are
+# affected by differences in feature scale.
+models = {
+    "Logistic Regression": make_pipeline(
+        StandardScaler(),
+        LogisticRegression(max_iter=1000)
+    ),
+    "K-NN": make_pipeline(
+        StandardScaler(),
+        KNeighborsClassifier(n_neighbors=5)
+    ),
+    "Naive Bayes": GaussianNB(),
+    "Decision Tree": DecisionTreeClassifier(random_state=42),
+    "Random Forest": RandomForestClassifier(
+        n_estimators=100,
+        random_state=42
+    )
+}
+
+# Train, predict, and collect evaluation metrics
+results = []
+predictions = {}
+
+for name, model in models.items():
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    predictions[name] = y_pred
+
+    results.append({
+        "Algorithm": name,
+        "Accuracy": accuracy_score(y_test, y_pred),
+        "Precision (weighted)": precision_score(
+            y_test, y_pred, average="weighted", zero_division=0
+        ),
+        "Recall (weighted)": recall_score(
+            y_test, y_pred, average="weighted", zero_division=0
+        ),
+        "F1-score (weighted)": f1_score(
+            y_test, y_pred, average="weighted", zero_division=0
+        )
+    })
+
+# Display metrics, sorted by accuracy
+results_df = pd.DataFrame(results).sort_values(
+    by="Accuracy", ascending=False
+).reset_index(drop=True)
+
+print("Classifier Performance on the Iris Test Set")
+print(results_df.round(3).to_string(index=False))
+
+# Plot a confusion matrix for each classifier
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+axes = axes.flatten()
+
+for i, (name, y_pred) in enumerate(predictions.items()):
+    cm = confusion_matrix(y_test, y_pred)
+    ConfusionMatrixDisplay(
+        confusion_matrix=cm,
+        display_labels=iris.target_names
+    ).plot(ax=axes[i], cmap="Blues", colorbar=False)
+    axes[i].set_title(name)
+
+# Hide the unused sixth subplot
+axes[-1].axis("off")
+
+plt.tight_layout()
+plt.show()
