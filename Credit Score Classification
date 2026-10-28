@@ -1,0 +1,76 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    ConfusionMatrixDisplay,
+    classification_report
+)
+
+# Create sample credit-related data
+X, y = make_classification(
+    n_samples=1000,
+    n_features=6,
+    n_informative=5,
+    n_redundant=0,
+    n_classes=3,
+    n_clusters_per_class=1,
+    class_sep=1.2,
+    random_state=42
+)
+
+feature_names = [
+    "Payment_History",
+    "Credit_Utilization",
+    "Credit_History_Length",
+    "Number_of_Loans",
+    "Debt_to_Income",
+    "Annual_Income"
+]
+class_names = ["Poor", "Average", "Good"]
+
+# Convert numeric labels to category names
+y = np.array(class_names)[y]
+
+# Create a DataFrame and show the first five rows
+data = pd.DataFrame(X, columns=feature_names)
+data["Credit_Score"] = y
+
+print("Sample dataset:")
+print(data.head())
+
+# Separate features and target
+X = data[feature_names]
+y = data["Credit_Score"]
+
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+# Train the classifier
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Predict credit-score categories
+y_pred = model.predict(X_test)
+
+# Show accuracy and classification report
+print(f"\nAccuracy: {accuracy_score(y_test, y_pred) * 100:.2f}%")
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred, labels=class_names))
+
+# Plot the confusion matrix
+cm = confusion_matrix(y_test, y_pred, labels=class_names)
+cm_plot = ConfusionMatrixDisplay(
+    confusion_matrix=cm,
+    display_labels=class_names
+)
+cm_plot.plot(cmap="Blues")
+plt.title("Credit Score Classification Confusion Matrix")
+plt.show()
