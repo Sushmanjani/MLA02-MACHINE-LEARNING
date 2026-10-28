@@ -1,0 +1,52 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_blobs
+from sklearn.mixture import GaussianMixture
+
+# Create sample data with two clusters
+X, _ = make_blobs(
+    n_samples=300,
+    centers=2,
+    cluster_std=1.2,
+    random_state=42
+)
+
+# Create a Gaussian Mixture Model
+# The GaussianMixture class fits the model using the EM algorithm
+model = GaussianMixture(
+    n_components=2,
+    max_iter=100,
+    random_state=42
+)
+
+# Fit the model (runs the E-step and M-step iteratively)
+model.fit(X)
+
+# Assign each data point to its most likely cluster
+labels = model.predict(X)
+
+print("EM Algorithm Results")
+print(f"Number of iterations: {model.n_iter_}")
+print(f"Converged: {model.converged_}")
+print(f"Log-likelihood: {model.score(X) * len(X):.2f}")
+print("\nCluster sizes:")
+for cluster in range(model.n_components):
+    print(f"Cluster {cluster}: {(labels == cluster).sum()} points")
+
+# Plot the clusters
+plt.scatter(X[:, 0], X[:, 1], c=labels, cmap="viridis", s=30)
+plt.xlabel("Feature 1")
+plt.ylabel("Feature 2")
+plt.title("Gaussian Mixture Model Clusters (EM Algorithm)")
+plt.colorbar(label="Cluster")
+plt.show()
+
+output
+EM Algorithm Results
+Number of iterations: 2
+Converged: True
+Log-likelihood: -1150.95
+
+Cluster sizes:
+Cluster 0: 150 points
+Cluster 1: 150 points
