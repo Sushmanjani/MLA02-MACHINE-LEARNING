@@ -1,0 +1,69 @@
+# Import required libraries
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
+
+# Load the Iris dataset
+iris = load_iris()
+X = iris.data
+y = iris.target
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+# Scale features because K-NN uses distances
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Create and train the K-NN model
+k = 5
+model = KNeighborsClassifier(n_neighbors=k)
+model.fit(X_train, y_train)
+
+# Predict flower classes for the test set
+y_pred = model.predict(X_test)
+
+# Display accuracy and confusion matrix
+print(f"K value: {k}")
+print(f"Accuracy: {accuracy_score(y_test, y_pred) * 100:.2f}%")
+
+cm = confusion_matrix(y_test, y_pred)
+print("\nConfusion Matrix:")
+print(cm)
+
+cm_plot = ConfusionMatrixDisplay(
+    confusion_matrix=cm,
+    display_labels=iris.target_names
+)
+cm_plot.plot(cmap="Blues")
+plt.title("Iris Flower Classification Using K-NN")
+plt.show()
+
+# Predict the class of a new flower
+# Input order: sepal length, sepal width, petal length, petal width (cm)
+new_flower = [[5.1, 3.5, 1.4, 0.2]]
+new_flower_scaled = scaler.transform(new_flower)
+prediction = model.predict(new_flower_scaled)
+
+print("\nPredicted class for the new flower:",
+      iris.target_names[prediction[0]])
+
+
+output
+K value: 5
+Accuracy: 93.33%
+
+Confusion Matrix:
+[[10  0  0]
+ [ 0 10  0]
+ [ 0  2  8]]
