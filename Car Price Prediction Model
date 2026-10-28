@@ -1,0 +1,67 @@
+import pandas as pd
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, r2_score
+
+# Sample car dataset
+data = pd.DataFrame({
+    "Year": [2015, 2017, 2018, 2016, 2020, 2019, 2014, 2021,
+             2018, 2017, 2022, 2016, 2020, 2015, 2019, 2021],
+    "Kilometers_Driven": [50000, 30000, 25000, 40000, 15000, 20000,
+                          60000, 10000, 28000, 35000, 8000, 45000,
+                          18000, 55000, 22000, 12000],
+    "Engine_CC": [1200, 1500, 1800, 1300, 2000, 1600, 1200, 2200,
+                  1800, 1500, 2000, 1300, 1800, 1200, 1600, 2200],
+    "Owner": [1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 1, 3, 1, 1],
+    "Price_Lakhs": [4.5, 7.2, 9.0, 5.0, 15.0, 10.5, 3.5, 18.0,
+                    9.2, 6.8, 17.0, 4.8, 11.0, 3.0, 9.8, 19.0]
+})
+
+print("Sample dataset:")
+print(data.head())
+
+# Separate input features and target
+X = data[["Year", "Kilometers_Driven", "Engine_CC", "Owner"]]
+y = data["Price_Lakhs"]
+
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.25, random_state=42
+)
+
+# Train the Linear Regression model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Evaluate the model
+y_pred = model.predict(X_test)
+
+print(f"\nMean Absolute Error: {mean_absolute_error(y_test, y_pred):.2f} lakhs")
+print(f"R² Score: {r2_score(y_test, y_pred):.2f}")
+
+# Predict the price of a new car
+# Values: year, kilometers driven, engine CC, number of previous owners
+new_car = pd.DataFrame(
+    [[2020, 20000, 1600, 1]],
+    columns=["Year", "Kilometers_Driven", "Engine_CC", "Owner"]
+)
+
+predicted_price = model.predict(new_car)[0]
+print(f"\nPredicted car price: ₹{predicted_price:.2f} lakhs")
+
+
+
+output
+Sample dataset:
+   Year  Kilometers_Driven  Engine_CC  Owner  Price_Lakhs
+0  2015              50000       1200      1          4.5
+1  2017              30000       1500      1          7.2
+2  2018              25000       1800      1          9.0
+3  2016              40000       1300      2          5.0
+4  2020              15000       2000      1         15.0
+
+Mean Absolute Error: 2.17 lakhs
+R² Score: 0.08
+
+Predicted car price: ₹10.11 lakhs
